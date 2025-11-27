@@ -2,6 +2,8 @@
 
 Your own personal scheduling app - no subscription needed!
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Ommsharravana/calendly&env=JWT_SECRET&envDescription=Secret%20key%20for%20authentication%20(use%20a%20random%20string)&envLink=https://github.com/Ommsharravana/calendly%23environment-variables&project-name=my-calendly&repository-name=my-calendly&stores=%5B%7B%22type%22%3A%22postgres%22%7D%5D)
+
 ## What is this?
 
 This is a **free, self-hosted alternative to Calendly**. You can:
@@ -14,33 +16,81 @@ This is a **free, self-hosted alternative to Calendly**. You can:
 
 ---
 
-## Quick Start (One Command!)
+## Deploy to Vercel (Easiest - One Click!)
 
-### Step 1: Install Node.js (if you don't have it)
+### Step 1: Click the Deploy Button
+
+Click the blue **"Deploy with Vercel"** button above.
+
+### Step 2: Create a Vercel Account (if you don't have one)
+
+- Sign up with GitHub, GitLab, or email
+- It's free!
+
+### Step 3: Configure Your App
+
+When prompted:
+
+1. **JWT_SECRET**: Enter any random text (like `mysecretkey123abc`) - this keeps your app secure
+2. Click **"Deploy"**
+
+### Step 4: Wait for Deployment
+
+- Vercel will automatically set up your database
+- This takes about 2-3 minutes
+- You'll see a green checkmark when done
+
+### Step 5: Open Your App
+
+1. Click **"Continue to Dashboard"**
+2. Click **"Visit"** to open your app
+3. Create your admin account
+4. Start scheduling!
+
+### Your Booking Link
+
+After deployment, your public booking page will be at:
+```
+https://your-app-name.vercel.app/book
+```
+
+Share this link with anyone who wants to book time with you!
+
+---
+
+## Environment Variables
+
+When deploying to Vercel, you need to set:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `JWT_SECRET` | Secret key for authentication | `your-random-secret-key-here` |
+
+The database (Vercel Postgres) is automatically configured when you click the deploy button.
+
+---
+
+## Run Locally (Alternative)
+
+If you prefer to run this on your own computer:
+
+### Step 1: Install Node.js
 
 1. Go to [nodejs.org](https://nodejs.org/)
-2. Download the **LTS** version (the big green button)
-3. Install it (just click Next until done)
+2. Download the **LTS** version
+3. Install it
 
-### Step 2: Start the App
-
-Open your terminal/command prompt and run:
+### Step 2: Download and Run
 
 ```bash
+git clone https://github.com/Ommsharravana/calendly.git
+cd calendly
 ./setup.sh
 ```
 
-**That's it!** The app will:
-- Install everything automatically
-- Create your configuration
-- Start the servers
+### Step 3: Open Your App
 
-### Step 3: Create Your Account
-
-1. Open your browser to **http://localhost:5173**
-2. Create your admin account (email + password)
-3. Set up your availability
-4. Share your booking link!
+Go to **http://localhost:5173** in your browser.
 
 ---
 
@@ -58,9 +108,8 @@ Open your terminal/command prompt and run:
 ### Sharing Your Booking Link
 
 Your public booking page is at:
-```
-http://localhost:5173/book
-```
+- **Vercel**: `https://your-app-name.vercel.app/book`
+- **Local**: `http://localhost:5173/book`
 
 Share this link with anyone who wants to book time with you!
 
@@ -68,146 +117,68 @@ Share this link with anyone who wants to book time with you!
 
 - View all your upcoming and past meetings in the **Bookings** page
 - Cancel or reschedule meetings if needed
-- Download calendar invites (.ics files)
-
----
-
-## Stopping the App
-
-Press `Ctrl+C` in the terminal, or run:
-
-```bash
-./stop.sh
-```
-
----
-
-## Starting Again Later
-
-Anytime you want to use the app again, just run:
-
-```bash
-./setup.sh
-```
-
----
-
-## Email Notifications (Optional)
-
-Want to get emails when someone books? Edit the file `backend/.env` and add your email settings:
-
-```
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-EMAIL_FROM=Your Name <your-email@gmail.com>
-```
-
-**For Gmail users:** You need to create an "App Password":
-1. Go to [Google Account Security](https://myaccount.google.com/security)
-2. Enable 2-Factor Authentication (if not already)
-3. Go to "App passwords"
-4. Create a new app password for "Mail"
-5. Use that password in SMTP_PASS
 
 ---
 
 ## Troubleshooting
 
-### "Command not found" when running setup.sh
+### Vercel Deployment Issues
 
-Make sure you're in the right folder:
+**"Build failed"**
+- Make sure all environment variables are set
+- Try redeploying from the Vercel dashboard
+
+**"Database connection error"**
+- The Postgres database should be auto-created
+- Check Vercel Dashboard → Storage → Postgres
+
+### Local Setup Issues
+
+**"Command not found"**
 ```bash
 cd calendly
 ./setup.sh
 ```
 
-On Windows, you may need to use:
-```bash
-bash setup.sh
-```
-
-### "Port already in use"
-
-Something else is running on port 3001 or 5173. The setup script usually handles this, but you can manually stop them:
-```bash
-./stop.sh
-```
-
-### "Node is not recognized"
-
-Node.js isn't installed properly. Try reinstalling from [nodejs.org](https://nodejs.org/).
-
-### App won't start
-
-1. Delete `backend/data.db` (your database will be reset)
-2. Run `./setup.sh` again
-
-### Need more help?
-
-Check the logs in your terminal for error messages.
+**"Node is not recognized"**
+- Install Node.js from [nodejs.org](https://nodejs.org/)
 
 ---
 
 ## For Developers
 
-### Running in Development Mode
-
-```bash
-# Install dependencies
-cd backend && npm install
-cd ../frontend && npm install
-
-# Start backend (in one terminal)
-cd backend && npm run dev
-
-# Start frontend (in another terminal)
-cd frontend && npm run dev
-```
-
-### Running Tests
-
-```bash
-# Backend tests
-cd backend && npm test
-
-# Frontend tests
-cd frontend && npm test
-```
-
 ### Project Structure
 
 ```
 calendly/
-├── setup.sh              # One-command setup script
-├── stop.sh               # Stop the app
-├── backend/
+├── api/                  # Vercel serverless functions
+│   ├── auth/            # Authentication endpoints
+│   ├── bookings/        # Booking endpoints
+│   ├── event-types/     # Event type endpoints
+│   ├── availability/    # Availability endpoints
+│   ├── schedule/        # Schedule endpoints
+│   ├── settings/        # Settings endpoints
+│   └── _lib/            # Shared utilities
+├── frontend/            # React frontend
 │   ├── src/
-│   │   ├── index.js      # Express server
-│   │   ├── database.js   # SQLite database
-│   │   ├── routes/       # API endpoints
-│   │   ├── middleware/   # Auth, validation, security
-│   │   └── migrations/   # Database migrations
-│   └── __tests__/        # Backend tests
-├── frontend/
-│   ├── src/
-│   │   ├── pages/        # React pages
-│   │   ├── components/   # Reusable components
-│   │   └── context/      # Auth state
-│   └── __tests__/        # Frontend tests
+│   │   ├── pages/       # React pages
+│   │   ├── components/  # Reusable components
+│   │   └── context/     # Auth state
+├── backend/             # Local development server (SQLite)
+├── vercel.json          # Vercel configuration
 └── README.md
 ```
 
 ### API Endpoints
 
 **Auth:**
+- `GET /api/auth/status` - Check auth status
 - `POST /api/auth/setup` - Create admin account
 - `POST /api/auth/login` - Login
 - `GET /api/auth/me` - Get current user
 
 **Event Types:**
-- `GET /api/event-types/active` - Public: list active types
+- `GET /api/event-types?active=true` - Public: list active types
 - `GET /api/event-types` - Admin: list all types
 - `POST /api/event-types` - Create new type
 - `PUT /api/event-types/:id` - Update type
@@ -216,20 +187,10 @@ calendly/
 **Bookings:**
 - `POST /api/bookings` - Create booking (public)
 - `GET /api/bookings` - List bookings (admin)
-- `POST /api/bookings/:id/cancel-public` - Cancel with token
+- `POST /api/bookings/cancel-public` - Cancel with token
 
 **Schedule:**
 - `GET /api/schedule/available-slots/:slug` - Get free slots
-
-### Security Features
-
-- JWT authentication
-- CSRF protection
-- Rate limiting
-- Input validation (Zod)
-- XSS sanitization
-- Secure headers (Helmet)
-- Cancellation tokens
 
 ---
 
