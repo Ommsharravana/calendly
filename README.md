@@ -1,147 +1,238 @@
 # Calendly Clone
 
-A self-hosted scheduling application for personal use. No subscription needed.
+Your own personal scheduling app - no subscription needed!
 
-## Features
+## What is this?
 
-- **Event Types**: Create multiple meeting types (15min, 30min, 60min, etc.) with custom colors and settings
-- **Availability Management**: Set your weekly availability hours
-- **Public Booking Page**: Share your link and let people book meetings with you
-- **Booking Management**: View, manage, and cancel bookings
-- **Email Notifications**: Get notified when meetings are booked or cancelled (optional SMTP configuration)
-- **Buffer Times**: Set buffer time before/after meetings
-- **Max Daily Bookings**: Limit bookings per day per event type
+This is a **free, self-hosted alternative to Calendly**. You can:
 
-## Quick Start
+- Let people book meetings with you
+- Set your available hours
+- Create different meeting types (15min calls, 1-hour meetings, etc.)
+- Get email notifications when someone books
+- No monthly fees!
 
-### Prerequisites
+---
 
-- Node.js 18+
-- npm
+## Quick Start (One Command!)
 
-### Installation
+### Step 1: Install Node.js (if you don't have it)
 
-```bash
-# Install all dependencies
-npm run install:all
-```
+1. Go to [nodejs.org](https://nodejs.org/)
+2. Download the **LTS** version (the big green button)
+3. Install it (just click Next until done)
 
-### Development
+### Step 2: Start the App
+
+Open your terminal/command prompt and run:
 
 ```bash
-# Run both frontend and backend in development mode
-npm run dev
+./setup.sh
 ```
 
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3001
-- Public booking page: http://localhost:5173/book
+**That's it!** The app will:
+- Install everything automatically
+- Create your configuration
+- Start the servers
 
-### Production
+### Step 3: Create Your Account
+
+1. Open your browser to **http://localhost:5173**
+2. Create your admin account (email + password)
+3. Set up your availability
+4. Share your booking link!
+
+---
+
+## How to Use
+
+### Setting Up Your Calendar
+
+1. **Go to Settings** - Add your name, email, and timezone
+2. **Set Availability** - Choose which hours you're free for meetings
+3. **Create Event Types** - Set up different meeting types:
+   - "Quick Call" - 15 minutes
+   - "Regular Meeting" - 30 minutes
+   - "Deep Dive" - 60 minutes
+
+### Sharing Your Booking Link
+
+Your public booking page is at:
+```
+http://localhost:5173/book
+```
+
+Share this link with anyone who wants to book time with you!
+
+### Managing Bookings
+
+- View all your upcoming and past meetings in the **Bookings** page
+- Cancel or reschedule meetings if needed
+- Download calendar invites (.ics files)
+
+---
+
+## Stopping the App
+
+Press `Ctrl+C` in the terminal, or run:
 
 ```bash
-# Build the frontend
-npm run build
-
-# Start the server
-npm start
+./stop.sh
 ```
 
-## Project Structure
+---
+
+## Starting Again Later
+
+Anytime you want to use the app again, just run:
+
+```bash
+./setup.sh
+```
+
+---
+
+## Email Notifications (Optional)
+
+Want to get emails when someone books? Edit the file `backend/.env` and add your email settings:
+
+```
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+EMAIL_FROM=Your Name <your-email@gmail.com>
+```
+
+**For Gmail users:** You need to create an "App Password":
+1. Go to [Google Account Security](https://myaccount.google.com/security)
+2. Enable 2-Factor Authentication (if not already)
+3. Go to "App passwords"
+4. Create a new app password for "Mail"
+5. Use that password in SMTP_PASS
+
+---
+
+## Troubleshooting
+
+### "Command not found" when running setup.sh
+
+Make sure you're in the right folder:
+```bash
+cd calendly
+./setup.sh
+```
+
+On Windows, you may need to use:
+```bash
+bash setup.sh
+```
+
+### "Port already in use"
+
+Something else is running on port 3001 or 5173. The setup script usually handles this, but you can manually stop them:
+```bash
+./stop.sh
+```
+
+### "Node is not recognized"
+
+Node.js isn't installed properly. Try reinstalling from [nodejs.org](https://nodejs.org/).
+
+### App won't start
+
+1. Delete `backend/data.db` (your database will be reset)
+2. Run `./setup.sh` again
+
+### Need more help?
+
+Check the logs in your terminal for error messages.
+
+---
+
+## For Developers
+
+### Running in Development Mode
+
+```bash
+# Install dependencies
+cd backend && npm install
+cd ../frontend && npm install
+
+# Start backend (in one terminal)
+cd backend && npm run dev
+
+# Start frontend (in another terminal)
+cd frontend && npm run dev
+```
+
+### Running Tests
+
+```bash
+# Backend tests
+cd backend && npm test
+
+# Frontend tests
+cd frontend && npm test
+```
+
+### Project Structure
 
 ```
 calendly/
+├── setup.sh              # One-command setup script
+├── stop.sh               # Stop the app
 ├── backend/
 │   ├── src/
-│   │   ├── index.js          # Express server entry
-│   │   ├── database.js       # SQLite database setup
-│   │   ├── email.js          # Email notifications
-│   │   └── routes/
-│   │       ├── settings.js   # User settings API
-│   │       ├── eventTypes.js # Event types CRUD
-│   │       ├── availability.js # Availability management
-│   │       ├── bookings.js   # Bookings CRUD
-│   │       └── schedule.js   # Available slots calculation
-│   └── data.db               # SQLite database (auto-created)
-│
+│   │   ├── index.js      # Express server
+│   │   ├── database.js   # SQLite database
+│   │   ├── routes/       # API endpoints
+│   │   ├── middleware/   # Auth, validation, security
+│   │   └── migrations/   # Database migrations
+│   └── __tests__/        # Backend tests
 ├── frontend/
 │   ├── src/
-│   │   ├── App.jsx           # Main app with routing
-│   │   ├── components/       # Reusable components
-│   │   ├── pages/            # Page components
-│   │   └── utils/api.js      # API client
-│   └── index.html
-│
-└── package.json              # Root package.json with scripts
+│   │   ├── pages/        # React pages
+│   │   ├── components/   # Reusable components
+│   │   └── context/      # Auth state
+│   └── __tests__/        # Frontend tests
+└── README.md
 ```
 
-## Configuration
+### API Endpoints
 
-### Email Notifications (Optional)
+**Auth:**
+- `POST /api/auth/setup` - Create admin account
+- `POST /api/auth/login` - Login
+- `GET /api/auth/me` - Get current user
 
-To enable email notifications, set these environment variables:
+**Event Types:**
+- `GET /api/event-types/active` - Public: list active types
+- `GET /api/event-types` - Admin: list all types
+- `POST /api/event-types` - Create new type
+- `PUT /api/event-types/:id` - Update type
+- `DELETE /api/event-types/:id` - Delete type
 
-```bash
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-SMTP_FROM=your-email@gmail.com  # optional
-```
+**Bookings:**
+- `POST /api/bookings` - Create booking (public)
+- `GET /api/bookings` - List bookings (admin)
+- `POST /api/bookings/:id/cancel-public` - Cancel with token
 
-For Gmail, you'll need to create an [App Password](https://support.google.com/accounts/answer/185833).
+**Schedule:**
+- `GET /api/schedule/available-slots/:slug` - Get free slots
 
-### Database
+### Security Features
 
-The app uses SQLite for storage. The database file (`data.db`) is automatically created in the backend folder on first run with default data:
+- JWT authentication
+- CSRF protection
+- Rate limiting
+- Input validation (Zod)
+- XSS sanitization
+- Secure headers (Helmet)
+- Cancellation tokens
 
-- Default availability: Monday-Friday, 9am-5pm
-- Three default event types: 15min, 30min, and 60min meetings
-
-## API Endpoints
-
-### Settings
-- `GET /api/settings` - Get user settings
-- `PUT /api/settings` - Update settings
-
-### Event Types
-- `GET /api/event-types` - List all event types
-- `GET /api/event-types/active` - List active event types (for public page)
-- `GET /api/event-types/:id` - Get single event type
-- `GET /api/event-types/slug/:slug` - Get by URL slug
-- `POST /api/event-types` - Create event type
-- `PUT /api/event-types/:id` - Update event type
-- `DELETE /api/event-types/:id` - Delete event type
-
-### Availability
-- `GET /api/availability` - Get weekly availability
-- `PUT /api/availability` - Update weekly availability
-- `GET /api/availability/overrides` - Get date overrides
-- `POST /api/availability/overrides` - Create date override
-- `DELETE /api/availability/overrides/:id` - Delete override
-
-### Bookings
-- `GET /api/bookings` - List bookings (with filters)
-- `GET /api/bookings/upcoming` - Get upcoming bookings
-- `GET /api/bookings/:id` - Get single booking
-- `POST /api/bookings` - Create booking
-- `PUT /api/bookings/:id/cancel` - Cancel booking
-- `PUT /api/bookings/:id/reschedule` - Reschedule booking
-- `DELETE /api/bookings/:id` - Delete booking
-
-### Schedule
-- `GET /api/schedule/available-slots/:slug` - Get available time slots
-- `GET /api/schedule/calendar` - Get calendar data
-
-## Usage
-
-1. **First Setup**: Go to Settings to configure your name, email, and timezone
-2. **Event Types**: Create or customize your meeting types in Event Types
-3. **Availability**: Set your available hours in Availability
-4. **Share Link**: Copy your booking link from Settings and share it
-5. **Manage Bookings**: View and manage all bookings in Bookings
+---
 
 ## License
 
-MIT - Use it however you want for personal use.
+MIT - Use it however you want!

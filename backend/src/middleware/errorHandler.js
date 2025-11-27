@@ -2,6 +2,49 @@ const logger = require('../utils/logger');
 const config = require('../config');
 
 /**
+ * User-friendly error messages for non-technical users
+ */
+const userFriendlyMessages = {
+  // Authentication errors
+  UNAUTHORIZED: 'Please log in to continue.',
+  INVALID_CREDENTIALS: 'The email or password you entered is incorrect. Please try again.',
+  INVALID_TOKEN: 'Your session has expired. Please log in again.',
+  TOKEN_EXPIRED: 'Your session has expired. Please log in again.',
+
+  // Validation errors
+  VALIDATION_ERROR: 'Please check your input and try again.',
+  INVALID_EMAIL: 'Please enter a valid email address.',
+  INVALID_TIME: 'The selected time slot is no longer available. Please choose another time.',
+  MISSING_FIELDS: 'Please fill in all required fields.',
+
+  // Booking errors
+  SLOT_UNAVAILABLE: 'Sorry, this time slot has already been booked. Please choose another time.',
+  BOOKING_NOT_FOUND: 'We couldn\'t find this booking. It may have been cancelled.',
+  INVALID_CANCEL_TOKEN: 'This cancellation link is invalid or has expired.',
+  ALREADY_CANCELLED: 'This booking has already been cancelled.',
+
+  // Event type errors
+  EVENT_TYPE_NOT_FOUND: 'This meeting type doesn\'t exist or has been disabled.',
+  SLUG_EXISTS: 'A meeting type with this URL already exists. Please choose a different URL.',
+
+  // General errors
+  NOT_FOUND: 'The page you\'re looking for doesn\'t exist.',
+  CONSTRAINT_ERROR: 'This action conflicts with existing data. Please try again.',
+  CSRF_ERROR: 'Your session may have expired. Please refresh the page and try again.',
+  INVALID_JSON: 'There was a problem with your request. Please refresh the page and try again.',
+  RATE_LIMITED: 'Too many requests. Please wait a moment and try again.',
+  INTERNAL_ERROR: 'Something went wrong on our end. Please try again later.',
+  SETUP_COMPLETED: 'An admin account already exists. Please log in instead.',
+};
+
+/**
+ * Get user-friendly message for an error code
+ */
+const getFriendlyMessage = (code, defaultMessage) => {
+  return userFriendlyMessages[code] || defaultMessage;
+};
+
+/**
  * Custom application error class
  */
 class AppError extends Error {
@@ -10,6 +53,9 @@ class AppError extends Error {
     this.statusCode = statusCode;
     this.code = code;
     this.isOperational = true;
+    // Store the technical message and provide a friendly one
+    this.technicalMessage = message;
+    this.friendlyMessage = getFriendlyMessage(code, message);
 
     Error.captureStackTrace(this, this.constructor);
   }
@@ -89,18 +135,24 @@ const errorHandler = (err, req, res, next) => {
     code = 'CSRF_ERROR';
   }
 
+  // Get user-friendly message
+  const friendlyMessage = getFriendlyMessage(code, message);
+
   // Build response
   const response = {
-    error: message,
+    error: friendlyMessage,
     code,
   };
 
-  // Include stack trace in development
-  if (config.isDev && statusCode >= 500) {
-    response.stack = err.stack;
+  // Include technical message in development
+  if (config.isDev) {
+    response.technicalError = message;
+    if (statusCode >= 500) {
+      response.stack = err.stack;
+    }
   }
 
-  // Include validation details if available
+  // Include validation details if available (make them user-friendly)
   if (err.details) {
     response.details = err.details;
   }
