@@ -1,20 +1,25 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
+const { authenticate } = require('../middleware/auth');
+const { validate, schemas } = require('../middleware/validation');
+const { asyncHandler } = require('../middleware/errorHandler');
 
-// Get settings
-router.get('/', (req, res) => {
-  try {
-    const settings = db.prepare('SELECT * FROM settings WHERE id = 1').get();
+// Get settings (public - needed for booking page)
+router.get(
+  '/',
+  asyncHandler(async (req, res) => {
+    const settings = db.prepare('SELECT id, name, email, timezone, welcome_message FROM settings WHERE id = 1').get();
     res.json(settings);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+  })
+);
 
-// Update settings
-router.put('/', (req, res) => {
-  try {
+// Update settings (admin only)
+router.put(
+  '/',
+  authenticate,
+  validate(schemas.updateSettings),
+  asyncHandler(async (req, res) => {
     const { name, email, timezone, welcome_message } = req.body;
 
     const stmt = db.prepare(`
@@ -31,9 +36,7 @@ router.put('/', (req, res) => {
 
     const updated = db.prepare('SELECT * FROM settings WHERE id = 1').get();
     res.json(updated);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+  })
+);
 
 module.exports = router;

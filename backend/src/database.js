@@ -1,13 +1,30 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const config = require('./config');
 
-const db = new Database(path.join(__dirname, '../data.db'));
+const dbPath = config.database?.path
+  ? path.resolve(config.database.path)
+  : path.join(__dirname, '../data.db');
 
-// Enable foreign keys
+const db = new Database(dbPath);
+
+// Enable foreign keys and WAL mode for better performance
 db.pragma('foreign_keys = ON');
+db.pragma('journal_mode = WAL');
 
 // Create tables
 db.exec(`
+  -- Users table for authentication
+  CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    name TEXT NOT NULL DEFAULT 'Admin',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_login DATETIME
+  );
+
   -- User settings (single user, personal use)
   CREATE TABLE IF NOT EXISTS settings (
     id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -73,6 +90,7 @@ db.exec(`
     notes TEXT,
     location TEXT,
     status TEXT NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'cancelled', 'completed')),
+    cancellation_token TEXT UNIQUE,
     cancellation_reason TEXT,
     cancelled_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -80,10 +98,19 @@ db.exec(`
     FOREIGN KEY (event_type_id) REFERENCES event_types(id) ON DELETE CASCADE
   );
 
+  -- Database migrations tracking
+  CREATE TABLE IF NOT EXISTS migrations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    executed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   -- Create indexes for common queries
+  CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
   CREATE INDEX IF NOT EXISTS idx_bookings_start_time ON bookings(start_time);
   CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
   CREATE INDEX IF NOT EXISTS idx_bookings_event_type ON bookings(event_type_id);
+  CREATE INDEX IF NOT EXISTS idx_bookings_cancellation_token ON bookings(cancellation_token);
   CREATE INDEX IF NOT EXISTS idx_availability_day ON availability(day_of_week);
   CREATE INDEX IF NOT EXISTS idx_availability_event_type ON availability(event_type_id);
 `);
@@ -152,4 +179,14 @@ if (eventTypesExist.count === 0) {
   );
 }
 
+// Helper function to close database properly
+const closeDatabase = () => {
+  try {
+    db.close();
+  } catch (error) {
+    // Ignore errors on close
+  }
+};
+
 module.exports = db;
+module.exports.closeDatabase = closeDatabase;

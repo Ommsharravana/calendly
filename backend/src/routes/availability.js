@@ -1,22 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
+const { authenticate } = require('../middleware/auth');
+const { validate, schemas } = require('../middleware/validation');
+const { asyncHandler, AppError } = require('../middleware/errorHandler');
+const logger = require('../utils/logger');
 
-// Get default availability (event_type_id is NULL)
-router.get('/', (req, res) => {
-  try {
+// Get default availability (public - needed for booking)
+router.get(
+  '/',
+  asyncHandler(async (req, res) => {
     const availability = db.prepare(`
       SELECT * FROM availability WHERE event_type_id IS NULL ORDER BY day_of_week
     `).all();
     res.json(availability);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+  })
+);
 
-// Get availability for a specific event type
-router.get('/event-type/:eventTypeId', (req, res) => {
-  try {
+// Get availability for a specific event type (public)
+router.get(
+  '/event-type/:eventTypeId',
+  asyncHandler(async (req, res) => {
     const { eventTypeId } = req.params;
 
     // First check if event type has custom availability
@@ -32,19 +36,16 @@ router.get('/event-type/:eventTypeId', (req, res) => {
     }
 
     res.json(availability);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+  })
+);
 
-// Update default availability
-router.put('/', (req, res) => {
-  try {
+// Update default availability (admin only)
+router.put(
+  '/',
+  authenticate,
+  validate(schemas.updateAvailability),
+  asyncHandler(async (req, res) => {
     const { schedule } = req.body;
-
-    if (!schedule || !Array.isArray(schedule)) {
-      return res.status(400).json({ error: 'Schedule array is required' });
-    }
 
     // Delete existing default availability
     db.prepare('DELETE FROM availability WHERE event_type_id IS NULL').run();
@@ -63,26 +64,25 @@ router.put('/', (req, res) => {
       SELECT * FROM availability WHERE event_type_id IS NULL ORDER BY day_of_week
     `).all();
 
-    res.json(availability);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+    logger.info('Default availability updated');
 
-// Update availability for a specific event type
-router.put('/event-type/:eventTypeId', (req, res) => {
-  try {
+    res.json(availability);
+  })
+);
+
+// Update availability for a specific event type (admin only)
+router.put(
+  '/event-type/:eventTypeId',
+  authenticate,
+  validate(schemas.updateAvailability),
+  asyncHandler(async (req, res) => {
     const { eventTypeId } = req.params;
     const { schedule } = req.body;
-
-    if (!schedule || !Array.isArray(schedule)) {
-      return res.status(400).json({ error: 'Schedule array is required' });
-    }
 
     // Verify event type exists
     const eventType = db.prepare('SELECT id FROM event_types WHERE id = ?').get(eventTypeId);
     if (!eventType) {
-      return res.status(404).json({ error: 'Event type not found' });
+      throw new AppError('Event type not found', 404, 'NOT_FOUND');
     }
 
     // Delete existing availability for this event type
@@ -102,15 +102,17 @@ router.put('/event-type/:eventTypeId', (req, res) => {
       SELECT * FROM availability WHERE event_type_id = ? ORDER BY day_of_week
     `).all(eventTypeId);
 
-    res.json(availability);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+    logger.info(`Availability updated for event type: ${eventTypeId}`);
 
-// Get availability overrides (date-specific)
-router.get('/overrides', (req, res) => {
-  try {
+    res.json(availability);
+  })
+);
+
+// Get availability overrides (admin only)
+router.get(
+  '/overrides',
+  authenticate,
+  asyncHandler(async (req, res) => {
     const { start_date, end_date } = req.query;
 
     let query = 'SELECT * FROM availability_overrides';
@@ -125,19 +127,16 @@ router.get('/overrides', (req, res) => {
 
     const overrides = db.prepare(query).all(...params);
     res.json(overrides);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+  })
+);
 
-// Create availability override
-router.post('/overrides', (req, res) => {
-  try {
+// Create availability override (admin only)
+router.post(
+  '/overrides',
+  authenticate,
+  validate(schemas.createOverride),
+  asyncHandler(async (req, res) => {
     const { date, start_time, end_time, is_available, reason } = req.body;
-
-    if (!date) {
-      return res.status(400).json({ error: 'Date is required' });
-    }
 
     // Delete existing override for this date
     db.prepare('DELETE FROM availability_overrides WHERE date = ?').run(date);
@@ -150,27 +149,31 @@ router.post('/overrides', (req, res) => {
     const result = stmt.run(date, start_time, end_time, is_available ? 1 : 0, reason);
 
     const override = db.prepare('SELECT * FROM availability_overrides WHERE id = ?').get(result.lastInsertRowid);
-    res.status(201).json(override);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
-// Delete availability override
-router.delete('/overrides/:id', (req, res) => {
-  try {
+    logger.info(`Availability override created for date: ${date}`);
+
+    res.status(201).json(override);
+  })
+);
+
+// Delete availability override (admin only)
+router.delete(
+  '/overrides/:id',
+  authenticate,
+  asyncHandler(async (req, res) => {
     const { id } = req.params;
 
     const existing = db.prepare('SELECT * FROM availability_overrides WHERE id = ?').get(id);
     if (!existing) {
-      return res.status(404).json({ error: 'Override not found' });
+      throw new AppError('Override not found', 404, 'NOT_FOUND');
     }
 
     db.prepare('DELETE FROM availability_overrides WHERE id = ?').run(id);
+
+    logger.info(`Availability override deleted: ${id}`);
+
     res.json({ message: 'Override deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+  })
+);
 
 module.exports = router;
