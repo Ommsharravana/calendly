@@ -101,7 +101,7 @@ if [ ! -f ".env" ]; then
 
 # Server
 PORT=3001
-NODE_ENV=production
+NODE_ENV=development
 
 # Security (auto-generated - keep these secret!)
 JWT_SECRET=$JWT_SECRET
